@@ -1,0 +1,11 @@
+{
+	"name": "not-enough-parameters",
+	"version": "1.0.1",
+	"title": "Not Enough Parameters",
+	"author": "ArchEzekiel",
+	"factorio_version": "2.0",
+	"contact": "TBD",
+	"homepage": "",
+	"description": "Gives an additional 26 parameters for each letter of the English Alphabet",
+	"dependencies": ["base >= 2.0.0"]
+}
