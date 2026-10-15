@@ -1,0 +1,14 @@
+﻿---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+Date: 2026-10-15
+  Changes:
+    - Reworked parameter generation: prototypes are cloned from the vanilla parameter-1 prototypes with an up-front existence check, so a missing vanilla prototype now fails with a readable error instead of a cryptic crash.
+    - All new prototypes are now registered in a single batched data:extend call.
+    - Letter parameters (A-Z) now have an explicit prefixed sort order so they sort deterministically after the vanilla 0-9 and still-not-enough-parameters' 10-99, instead of splitting the alphabet in half when both mods are enabled.
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2024-12-01
+  Changes:
+    - Initial code base by ArchEzekiel
+---------------------------------------------------------------------------------------------------

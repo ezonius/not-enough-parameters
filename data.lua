@@ -1,25 +1,52 @@
-local alphabet = "abcdefghijklmnopqrstuvwxyz"
+-- Creates 26 additional blueprint parameters (parameter-a .. parameter-z),
+-- cloning the vanilla parameter prototypes (parameter-1) exactly like base does
+-- in base/prototypes/item.lua, fluid.lua, recipe.lua and entity/entities.lua.
 
-for c in alphabet:gmatch"." do
-    local temp_item = table.deepcopy(data.raw["item"]["parameter-1"])
-    local temp_fluid = table.deepcopy(data.raw["fluid"]["parameter-1"])
-    local temp_recipe = table.deepcopy(data.raw["recipe"]["parameter-1"])
-    local temp_simple_entity = table.deepcopy(data.raw["simple-entity"]["parameter-1"])
+local ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+local MOD_NAME = "not-enough-parameters"
 
-    temp_item.name = "parameter-"..c
-    temp_fluid.name = "parameter-"..c
-    temp_recipe.name = "parameter-"..c
-    temp_simple_entity.name = "parameter-"..c
+-- The prototype types that vanilla uses for blueprint parameters, and the
+-- prototype of each type we clone from.
+local PARAMETER_TYPES = { "item", "fluid", "recipe", "simple-entity" }
 
-    temp_item.icon = "__not-enough-parameters__/graphics/parameter-"..c..".png"
-    temp_fluid.icon = "__not-enough-parameters__/graphics/parameter-"..c..".png"
-    temp_recipe.icon = "__not-enough-parameters__/graphics/parameter-"..c..".png"
-    temp_simple_entity.icon = "__not-enough-parameters__/graphics/parameter-"..c..".png"
-
-    temp_item.localised_name = {"parameter-x", c:upper()}
-    temp_fluid.localised_name = {"parameter-x", c:upper()}
-    temp_recipe.localised_name = {"parameter-x", c:upper()}
-    temp_simple_entity.localised_name = {"parameter-x", c:upper()}
-
-    data:extend{temp_item, temp_fluid, temp_recipe, temp_simple_entity}
+-- Grab the vanilla prototypes once, up front, so a missing prototype fails
+-- loudly with a readable message instead of a cryptic nil error deep in
+-- table.deepcopy on the 18th loop iteration.
+local vanilla_parameters = {}
+for _, prototype_type in ipairs(PARAMETER_TYPES) do
+	local prototype = data.raw[prototype_type] and data.raw[prototype_type]["parameter-1"]
+	if not prototype then
+		error("[" .. MOD_NAME .. "] Vanilla prototype '" .. prototype_type .. ".parameter-1' not found. " ..
+			"This mod clones it to create extra blueprint parameters and cannot work without it. " ..
+			"Please check your base game version.")
+	end
+	vanilla_parameters[prototype_type] = prototype
 end
+
+local new_prototypes = {}
+
+for c in ALPHABET:gmatch"." do
+	local letter = c:upper()
+	for _, prototype_type in ipairs(PARAMETER_TYPES) do
+		local temp = table.deepcopy(vanilla_parameters[prototype_type])
+
+		temp.name = "parameter-" .. c
+		temp.icon = "__" .. MOD_NAME .. "__/graphics/parameter-" .. c .. ".png"
+		-- Locale keys "parameter-x" and "entity-description.parameter-x" come from
+		-- base, same as vanilla parameter-0..9 uses ("Parameter __1__").
+		temp.localised_name = { "parameter-x", letter }
+
+		-- Explicit per-letter sort order. Sorting is lexicographic on the order
+		-- string. "parameter-z" + letter sorts after other mods' numeric orders
+		-- (e.g. still-not-enough-parameters "parameter-z10".."parameter-z99",
+		-- since digits compare before letters), giving this stable order in the
+		-- pickers:
+		--   vanilla 0-9 (order "a") -> 10-99 ("parameter-z10".."parameter-z99")
+		--   -> letters A-Z ("parameter-za".."parameter-zz")
+		temp.order = "parameter-z" .. c
+
+		new_prototypes[#new_prototypes + 1] = temp
+	end
+end
+
+data:extend(new_prototypes)
